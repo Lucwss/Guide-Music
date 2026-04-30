@@ -1,7 +1,19 @@
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 
-import { AppThemeProvider, useAppTheme } from "../theme";
+import {
+  APP_FONT_SOURCES,
+  AppThemeProvider,
+  applyGlobalFontDefaults,
+  useAppTheme,
+} from "../theme";
+
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Intentionally ignored because this can be called more than once during HMR.
+});
 
 function RootNavigator() {
   const { resolvedMode, theme } = useAppTheme();
@@ -9,26 +21,29 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: theme.colors.surface,
-          },
-          headerTintColor: theme.colors.text,
-          headerShadowVisible: false,
-          headerTitleStyle: {
-            fontWeight: "600",
-          },
-          contentStyle: {
-            backgroundColor: theme.colors.background,
-          },
-        }}
-      />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
     </>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(APP_FONT_SOURCES);
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      applyGlobalFontDefaults();
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore splash hide failures in development/hot reload scenarios.
+      });
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <AppThemeProvider>
       <RootNavigator />

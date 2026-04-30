@@ -29,7 +29,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function resolveThemeMode(
   mode: ThemeMode,
-  systemMode: "light" | "dark" | null,
+  systemMode: "light" | "dark" | null | undefined,
 ): ResolvedThemeMode {
   if (mode === "system") {
     return systemMode === "dark" ? "dark" : "light";

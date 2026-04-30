@@ -4,6 +4,8 @@ import {
   type Theme as NavigationTheme,
 } from "@react-navigation/native";
 
+import { APP_FONTS } from "./fonts";
+
 export type ThemeMode = "system" | "light" | "dark";
 export type ResolvedThemeMode = "light" | "dark";
 
@@ -28,7 +30,21 @@ const typography = {
   title: 28,
 } as const;
 
-const lightColors = {
+type ThemeColors = {
+  background: string;
+  surface: string;
+  surfaceMuted: string;
+  text: string;
+  textMuted: string;
+  primary: string;
+  accent: string;
+  border: string;
+  success: string;
+  warning: string;
+  danger: string;
+};
+
+const lightColors: ThemeColors = {
   background: "#F4F7FB",
   surface: "#FFFFFF",
   surfaceMuted: "#EAF0F8",
@@ -40,9 +56,9 @@ const lightColors = {
   success: "#16A34A",
   warning: "#D97706",
   danger: "#DC2626",
-} as const;
+};
 
-const darkColors = {
+const darkColors: ThemeColors = {
   background: "#0B1220",
   surface: "#131C2E",
   surfaceMuted: "#1C2740",
@@ -54,9 +70,7 @@ const darkColors = {
   success: "#4ADE80",
   warning: "#FBBF24",
   danger: "#FB7185",
-} as const;
-
-type ThemeColors = typeof lightColors;
+};
 
 export type AppTheme = {
   mode: ResolvedThemeMode;
@@ -64,6 +78,7 @@ export type AppTheme = {
   spacing: typeof spacing;
   radius: typeof radius;
   typography: typeof typography;
+  fonts: typeof APP_FONTS;
 };
 
 export function createAppTheme(mode: ResolvedThemeMode): AppTheme {
@@ -73,6 +88,7 @@ export function createAppTheme(mode: ResolvedThemeMode): AppTheme {
     spacing,
     radius,
     typography,
+    fonts: APP_FONTS,
   };
 }
 
