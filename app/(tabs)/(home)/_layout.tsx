@@ -18,6 +18,13 @@ export default function HomeStackLayout() {
           animation: "slide_from_right",
         }}
       />
+      <Stack.Screen
+        name="playlist-dynamic"
+        options={{
+          headerShown: false,
+          animation: "slide_from_right",
+        }}
+      />
     </Stack>
   );
 }

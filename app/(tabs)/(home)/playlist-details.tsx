@@ -1,8 +1,8 @@
 import Octicons from "@expo/vector-icons/Octicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { type Href, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +30,7 @@ type TonePalette = {
 const SONG_TONES = ["C#", "D", "Gb", "A", "E", "B"] as const;
 const YOUTUBE_RED = "#FF0000";
 const YOUTUBE_RED_DARK = "#CC0000";
+const RELOAD_DELAY_MS = 380;
 
 const TONE_PALETTES: Record<string, TonePalette> = {
   C: { background: "#F97316", border: "#EA580C", text: "#FFFFFF" },
@@ -65,8 +66,8 @@ function getParam(value: string | string[] | undefined, fallbackValue: string) {
   return value ?? fallbackValue;
 }
 
-function buildSongs(playlistId: string) {
-  const seed = Number.parseInt(playlistId, 10) || 1;
+function buildSongs(playlistId: string, seedOffset = 0) {
+  const seed = (Number.parseInt(playlistId, 10) || 1) + seedOffset;
 
   return Array.from({ length: 4 }, (_, index): SongItem => {
     const tone = SONG_TONES[(seed + index) % SONG_TONES.length];
@@ -77,6 +78,12 @@ function buildSongs(playlistId: string) {
       tone,
       title: `Música ${number}`,
     };
+  });
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
   });
 }
 
@@ -91,25 +98,56 @@ export default function PlaylistDetailsScreen() {
   const styles = createStyles(theme, resolvedMode);
   const iconColor = resolvedMode === "dark" ? "#E6EDF3" : "#0F172A";
   const primaryAccent = resolvedMode === "dark" ? "#7AB7FF" : "#2563EB";
+  const spinnerColor = resolvedMode === "dark" ? "#E6EDF3" : "#334155";
 
   const playlistId = getParam(params.id, "0001");
   const eventName = getParam(params.event, "Culto de Domingo");
   const dmName = getParam(params.dm, "Anderson");
   const createdAt = getParam(params.createdAt, "10/03/2026");
-  const songs = useMemo(() => buildSongs(playlistId), [playlistId]);
+  const [reloadTick, setReloadTick] = useState(0);
+  const [isReloading, setIsReloading] = useState(false);
+  const songs = useMemo(() => buildSongs(playlistId, reloadTick), [playlistId, reloadTick]);
+
+  const onReload = useCallback(async () => {
+    if (isReloading) {
+      return;
+    }
+
+    setIsReloading(true);
+    await wait(RELOAD_DELAY_MS);
+    setReloadTick((current) => current + 1);
+    setIsReloading(false);
+  }, [isReloading]);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+            onPress={() => router.back()}
+            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          >
+            <Octicons name="arrow-left" size={20} color={iconColor} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Playlist</Text>
+        </View>
+
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          onPress={() => router.back()}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          accessibilityLabel="Recarregar detalhes da playlist"
+          onPress={() => {
+            void onReload();
+          }}
+          style={({ pressed }) => [styles.reloadButton, pressed && styles.pressed]}
         >
-          <Octicons name="arrow-left" size={20} color={iconColor} />
+          {isReloading ? (
+            <ActivityIndicator size="small" color={spinnerColor} />
+          ) : (
+            <MaterialCommunityIcons name="reload" size={20} color={iconColor} />
+          )}
         </Pressable>
-        <Text style={styles.headerTitle}>Playlist</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -176,7 +214,22 @@ export default function PlaylistDetailsScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(220).delay(80)} style={styles.dynamicWrap}>
-          <Pressable style={({ pressed }) => [styles.dynamicButton, pressed && styles.pressed]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Abrir dinâmica da playlist"
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/(home)/playlist-dynamic",
+                params: {
+                  id: playlistId,
+                  event: eventName,
+                  dm: dmName,
+                  createdAt,
+                },
+              } as Href)
+            }
+            style={({ pressed }) => [styles.dynamicButton, pressed && styles.pressed]}
+          >
             <MaterialCommunityIcons
               name="format-list-bulleted"
               size={20}
@@ -203,7 +256,7 @@ function createStyles(theme: AppTheme, resolvedMode: "light" | "dark") {
     headerRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
+      justifyContent: "space-between",
       paddingHorizontal: 16,
       paddingTop: 8,
       paddingBottom: 12,
@@ -211,7 +264,19 @@ function createStyles(theme: AppTheme, resolvedMode: "light" | "dark") {
       borderBottomColor: isDark ? "#2D333B" : theme.colors.border,
       backgroundColor: isDark ? "#0D1117" : theme.colors.background,
     },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
     backButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    reloadButton: {
       width: 32,
       height: 32,
       borderRadius: 16,
