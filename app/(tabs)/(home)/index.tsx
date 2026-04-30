@@ -1,9 +1,10 @@
 import Octicons from "@expo/vector-icons/Octicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { type Href, useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { type AppTheme, useAppTheme } from "../../theme";
+import { type AppTheme, useAppTheme } from "../../../theme";
 
 const HOME_SECTION = {
   label: "playlist dos cultos",
@@ -11,9 +12,11 @@ const HOME_SECTION = {
 } as const;
 
 export default function HomeTab() {
+  const router = useRouter();
   const { theme, resolvedMode } = useAppTheme();
   const styles = createStyles(theme, resolvedMode);
   const playlistIconColor = resolvedMode === "dark" ? "#93C5FD" : "#1D4ED8";
+  const chevronColor = resolvedMode === "dark" ? "#8B949E" : "#64748B";
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -28,7 +31,11 @@ export default function HomeTab() {
         </View>
 
         <View style={styles.workList}>
-          <View style={styles.workItem}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/(tabs)/(home)/playlist" as Href)}
+            style={({ pressed }) => [styles.workItem, pressed && styles.workItemPressed]}
+          >
             <View style={styles.workIconWrap}>
               <MaterialIcons
                 name={HOME_SECTION.icon}
@@ -37,7 +44,8 @@ export default function HomeTab() {
               />
             </View>
             <Text style={styles.workLabel}>{HOME_SECTION.label}</Text>
-          </View>
+            <Octicons name="chevron-right" size={18} color={chevronColor} style={styles.chevronIcon} />
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -99,6 +107,9 @@ function createStyles(theme: AppTheme, resolvedMode: "light" | "dark") {
       borderColor: isDark ? "#2D333B" : theme.colors.border,
       backgroundColor: isDark ? "#111827" : theme.colors.surface,
     },
+    workItemPressed: {
+      opacity: 0.82,
+    },
     workIconWrap: {
       width: 24,
       height: 24,
@@ -110,6 +121,9 @@ function createStyles(theme: AppTheme, resolvedMode: "light" | "dark") {
       fontSize: 18,
       lineHeight: 22,
       fontFamily: theme.fonts.medium,
+    },
+    chevronIcon: {
+      marginLeft: "auto",
     },
   });
 }

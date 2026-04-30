@@ -8,7 +8,7 @@ import { APP_FONTS, useAppTheme } from "../theme";
 type IconName = React.ComponentProps<typeof Octicons>["name"];
 
 const TAB_ICONS: Record<string, IconName> = {
-  index: "home",
+  "(home)": "home",
   inbox: "inbox",
   explore: "telescope",
   copilot: "hubot",
