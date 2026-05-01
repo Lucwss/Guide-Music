@@ -1,9 +1,20 @@
 import Octicons from "@expo/vector-icons/Octicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { type Href, useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback } from "react";
+import {
+  ActionSheetIOS,
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuth } from "../../../auth/provider";
 import { type AppTheme, useAppTheme } from "../../../theme";
 
 const HOME_SECTION = {
@@ -13,10 +24,44 @@ const HOME_SECTION = {
 
 export default function HomeTab() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const { theme, resolvedMode } = useAppTheme();
   const styles = createStyles(theme, resolvedMode);
   const playlistIconColor = resolvedMode === "dark" ? "#93C5FD" : "#1D4ED8";
   const chevronColor = resolvedMode === "dark" ? "#8B949E" : "#64748B";
+
+  const onPressUserIcon = useCallback(() => {
+    const onConfirmLogout = () => {
+      signOut();
+    };
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: "Conta",
+          options: ["Cancelar", "Logout"],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 1,
+        },
+        (selectedIndex) => {
+          if (selectedIndex === 1) {
+            onConfirmLogout();
+          }
+        },
+      );
+
+      return;
+    }
+
+    Alert.alert("Conta", "Selecione uma ação", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: onConfirmLogout,
+      },
+    ]);
+  }, [signOut]);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -24,9 +69,14 @@ export default function HomeTab() {
         <View style={styles.headerRow}>
           <Text style={styles.pageTitle}>Home</Text>
           <View style={styles.headerActions}>
-            <View style={styles.avatarDot}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Abrir menu da conta"
+              onPress={onPressUserIcon}
+              style={({ pressed }) => [styles.avatarDot, pressed && styles.avatarPressed]}
+            >
               <Octicons name="person" size={16} color={styles.avatarIcon.color} />
-            </View>
+            </Pressable>
           </View>
         </View>
 
@@ -88,6 +138,9 @@ function createStyles(theme: AppTheme, resolvedMode: "light" | "dark") {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: isDark ? "#30363D" : "#CBD5E1",
+    },
+    avatarPressed: {
+      opacity: 0.82,
     },
     avatarIcon: {
       color: isDark ? "#E2E8F0" : "#1E293B",

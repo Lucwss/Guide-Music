@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
+import { AuthProvider } from "../auth/provider";
 import {
   APP_FONT_SOURCES,
   AppThemeProvider,
@@ -21,7 +22,13 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style={resolvedMode === "dark" ? "light" : "dark"} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      >
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </>
@@ -46,7 +53,9 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-      <RootNavigator />
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
     </AppThemeProvider>
   );
 }

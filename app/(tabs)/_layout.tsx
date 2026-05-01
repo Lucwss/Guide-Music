@@ -1,8 +1,15 @@
-import { Tabs } from "expo-router";
+import { type Href, Redirect, Tabs } from "expo-router";
 
+import { useAuth } from "../../auth/provider";
 import { GithubTabBar } from "../../components/github-tab-bar";
 
 export default function TabsLayout() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Redirect href={"/(auth)" as Href} />;
+  }
+
   return (
     <Tabs tabBar={(props) => <GithubTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen

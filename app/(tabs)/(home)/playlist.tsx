@@ -58,7 +58,7 @@ function buildPlaylist(index: number): ServicePlaylist {
   const id = String(index + 1).padStart(4, "0");
   const event = EVENTS[index % EVENTS.length];
   const dm = DMS[index % DMS.length];
-  const created = new Date(2026, 0, 5 + index * 2).toLocaleDateString("pt-BR");
+  const created = new Date().toLocaleDateString("pt-BR");
 
   return {
     id,
@@ -106,14 +106,23 @@ export default function PlaylistScreen() {
 
     const customPlaylist: ServicePlaylist = {
       id: String(idNumber).padStart(4, "0"),
-      event: "Novo culto",
-      dm: "Anderson",
+      event: "",
+      dm: "",
       createdAt: new Date().toLocaleDateString("pt-BR"),
     };
 
-    setPlaylists((current) => [customPlaylist, ...current]);
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, []);
+    router.push({
+      pathname: "/(tabs)/(home)/playlist-details",
+      params: {
+        id: customPlaylist.id,
+        event: customPlaylist.event,
+        dm: customPlaylist.dm,
+        createdAt: customPlaylist.createdAt,
+        mode: "create",
+        draftId: `draft-${customPlaylist.id}-${Date.now()}`,
+      },
+    } as Href);
+  }, [router]);
 
   const loadFirstPage = useCallback(async () => {
     const firstBatch = await fetchPlaylistsPage(1, PAGE_SIZE);
